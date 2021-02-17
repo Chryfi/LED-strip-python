@@ -36,7 +36,7 @@ def main():
 
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
     
-    #handler.addAnimation(RainbowCycle(stripe,13))
+    #handler.addAnimation(RainbowCycle(stripe,5))
     
     try:
         while True:
@@ -93,6 +93,7 @@ class AnimationHandler(IObserver):
         self.isShutDown = True
     
     def update(self, wait_ms=20):
+        counter = 0
         while True and self.interrupted == False:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -110,6 +111,11 @@ class AnimationHandler(IObserver):
             self.stripe.show()
             self.render()
             self.exit.wait(wait_ms/1000.0)
+            if counter == 5:
+                counter = 0
+                rgbCycle = RainbowCycle(None,20)
+                self.addAnimation(Pulse(random.randint(0,299),self.stripe, 8, -1, rgbCycle))
+            counter = counter + 1
 
         if self.clear == True:
             for animation in self._animations:

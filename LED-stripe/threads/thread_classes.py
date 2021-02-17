@@ -45,7 +45,7 @@ class PulseThread(threading.Thread, Observerable):
             while True:
                 for o in self.observers:
                     rgbCycle = RainbowCycle(None,20)
-                    o.addAnimation(Pulse(random.randint(0,299),o.stripe, 8, -1, rgbCycle))
+                    #o.addAnimation(Pulse(random.randint(0,299),o.stripe, 8, -1, rgbCycle))
                 time.sleep(0.25)
                 
         except Exception as e:
