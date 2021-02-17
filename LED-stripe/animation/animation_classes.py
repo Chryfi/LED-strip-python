@@ -6,8 +6,8 @@ import time
 class IAnimation:
 
     def __init__(self, stripe : Adafruit_NeoPixel):
-        self.__class__.stripe = stripe
-        self.__class__._dead = False
+        self.stripe = stripe
+        self._dead = False
 
     def update():
         pass
@@ -122,7 +122,10 @@ class Pulse(IAnimation):
             
         if self.stripe.getPixelColorRGB(self.leftPos).r == 0 and self.stripe.getPixelColorRGB(self.leftPos).g == 0 and self.stripe.getPixelColorRGB(self.leftPos).b == 0:
             self._dead = True
-        self.rgbCycle.updateState()
+            
+        if self.rgbCycle != None:
+            self.rgbCycle.updateState()
+            
         self.age = self.age + 1*self.dt
 
     def reset(self):

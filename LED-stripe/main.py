@@ -52,6 +52,7 @@ class AnimationHandler(IObserver):
     clear = False
     exit = Event()
     _animations = []
+    isShutDown = False
 
     def __init__(self, stripe : Adafruit_NeoPixel):
         self.stripe = stripe
@@ -71,6 +72,8 @@ class AnimationHandler(IObserver):
             self.clearStripe()
             self.interrupt(str(o))
             self.clear = True
+        elif arg == "shutdown":
+            self.shutdown(str(o))
         else:
             print("StripeAnimation Error: argument '"+arg+"' given by "+str(o)+" not known!")
 
@@ -84,6 +87,10 @@ class AnimationHandler(IObserver):
         print("Interrupted by %s" % arg)
         self.exit.set() #interrupts waiting
         self.exit.clear() #sets flag of event to false again
+
+    def shutdown(self, arg):
+        print("Shutdown by %s" % arg)
+        self.isShutDown = True
     
     def update(self, wait_ms=20):
         while True and self.interrupted == False:
@@ -92,10 +99,13 @@ class AnimationHandler(IObserver):
                     pg.quit()
                     quit()
             
-            for animation in self._animations:
-                animation.update()
-                if animation.isDead() == True:
-                    self._animations.remove(animation)
+            if self.isShutDown == True:
+                self.fadeOut(5)
+            else:
+                for animation in self._animations:
+                    animation.update()
+                    if animation.isDead() == True:
+                        self._animations.remove(animation)
             
             self.stripe.show()
             self.render()
@@ -126,6 +136,26 @@ class AnimationHandler(IObserver):
         for pos in range(self.stripe.numPixels()):
             self.stripe.setPixelColor(pos, Color(0,0,0))
         self.stripe.show()
+        
+    def fadeOut(self, speed):
+        for pos in range(self.stripe.numPixels()):
+            r = self.stripe.getPixelColorRGB(pos).r - speed
+                
+            if r < 0:
+                r = 0
+                    
+            g = self.stripe.getPixelColorRGB(pos).g - speed
+                
+            if g < 0:
+                g = 0
+                    
+            b = self.stripe.getPixelColorRGB(pos).b - speed
+                
+            if b < 0:
+                b = 0
+                    
+            self.stripe.setPixelColor(pos, Color(r,g,b))
+
 
 
 

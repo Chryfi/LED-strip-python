@@ -1,0 +1,4 @@
+###### Requirements without Version Specifiers ######`
+math
+numpy
+#pyopenGL needs to be installed manually from another site as normal pyopenGL doesn't contain glut dlls
