@@ -1,11 +1,11 @@
 from utility import *
-from led_class_template import *
+from rpi_ws281x import *
 import numpy as np
 import time
 
 class IAnimation:
 
-    def __init__(self, stripe : Adafruit_NeoPixel):
+    def __init__(self, stripe : PixelStrip):
         self.stripe = stripe
         self._dead = False
 
@@ -28,7 +28,7 @@ class RainbowCycle(IAnimation):
     age = 0
     dt = 0.5
 
-    def __init__(self, stripe : Adafruit_NeoPixel, rate = 1):
+    def __init__(self, stripe : PixelStrip, rate = 1):
         super().__init__(stripe)
         self.rate = rate
 
@@ -39,9 +39,49 @@ class RainbowCycle(IAnimation):
         self.age = self.age + 1*self.dt
 
     def updateState(self):
-        self.state = self.state + self.rate
+        self.state = round(self.state + self.rate)
         if self.state > 256:
             self.state = 0
+
+class Fade(IAnimation):
+    velocity = None
+    useBrightness = None
+    age = 0
+    dt = None
+
+    def __init__(self, stripe : PixelStrip, velocity, useBrightness = False):
+        super().__init__(stripe)
+        self.velocity = round(velocity)
+        self.dt = 0.1
+        self.useBrightness = useBrightness
+
+    def update(self):
+        die = True
+
+        if self.useBrightness == True:
+            self.stripe.setBrightness(clamp(round(self.stripe.getBrightness+self.velocity, 0, 255)))
+            if self.stripe.getBrightness() != 0:
+                die = False
+        else:
+            for pos in range(self.stripe.numPixels()):
+                #r = clamp(round(self.stripe.getPixelColorRGB(pos).r + self.velocity), 0, 255)
+                #g = clamp(round(self.stripe.getPixelColorRGB(pos).g + self.velocity), 0, 255)
+                #b = clamp(round(self.stripe.getPixelColorRGB(pos).b + self.velocity), 0, 255)
+
+                r = math.floor(min(255,self.stripe.getPixelColorRGB(pos).r *(1+ self.velocity*self.dt)))
+                g = math.floor(min(255,self.stripe.getPixelColorRGB(pos).g *(1+ self.velocity*self.dt)))
+                b = math.floor(min(255,self.stripe.getPixelColorRGB(pos).b *(1+ self.velocity*self.dt)))
+
+                if r != 0 or g != 0 or b != 0:
+                    die = False
+
+                self.stripe.setPixelColorRGB(pos, r, g, b)
+
+        if die == True:
+            self._dead = True
+
+        self.age = self.age + self.dt
+        
 
 class Pulse(IAnimation):
     middlePos = None
@@ -56,7 +96,7 @@ class Pulse(IAnimation):
     copy = None
     rgbCycle = None
 
-    def __init__(self, middlePos, stripe : Adafruit_NeoPixel, velocity = 3, acceleration = -0.5, rgbCycle:RainbowCycle = None, makeCopy = True):
+    def __init__(self, middlePos, stripe : PixelStrip, velocity = 3, acceleration = -0.5, rgbCycle:RainbowCycle = None, makeCopy = True):
         super().__init__(stripe)
         self.middlePos = middlePos
         self.leftPos = middlePos
@@ -69,14 +109,8 @@ class Pulse(IAnimation):
             self.copy = self.clone()
     
     def update(self):
-        self.leftPos = round(self.leftPos - self.velocity*self.dt)
-        self.rightPos = round(self.rightPos + self.velocity*self.dt)
-
-        if(self.leftPos<0):
-            self.leftPos = 0
-
-        if(self.rightPos>299):
-            self.rightPos = 299
+        self.leftPos = clamp(round(self.leftPos - self.velocity*self.dt), 0, self.stripe.numPixels()-1)
+        self.rightPos = clamp(round(self.rightPos + self.velocity*self.dt), 0, self.stripe.numPixels()-1)
 
         self.velocity = self.velocity + self.acceleration*self.dt
 

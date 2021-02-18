@@ -1,4 +1,9 @@
-###### Requirements without Version Specifiers ######`
+###### Requirements without Version Specifiers ######
 math
 numpy
-#pyopenGL needs to be installed manually from another site as normal pyopenGL doesn't contain glut dlls
+thread6
+time
+random
+rpi_ws281x
+#OpenGL
+#pygame

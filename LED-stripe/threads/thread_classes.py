@@ -1,6 +1,5 @@
 import threading
 from observer_pattern.observer_classes import *
-from animation.animation_classes import *
 import random
 
 class ConsoleThread(threading.Thread, Observerable):
@@ -29,7 +28,7 @@ class ConsoleThread(threading.Thread, Observerable):
 
         
         
-class PulseThread(threading.Thread, Observerable):
+"""class PulseThread(threading.Thread, Observerable):
     observers = []
     
     def __init__(self, threadID, name, group = None):
@@ -54,4 +53,4 @@ class PulseThread(threading.Thread, Observerable):
             print("KeyboardInterrupting "+str(self)+"\n")
     
     def __str__(self):
-        return __class__.__name__+" \"%s\" < ThreadID %s, started %s %s >" % (self.name, self.threadID, "daemon" if self.daemon == True else "", self.ident)
+        return __class__.__name__+" \"%s\" < ThreadID %s, started %s %s >" % (self.name, self.threadID, "daemon" if self.daemon == True else "", self.ident)"""
