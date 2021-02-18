@@ -27,7 +27,7 @@ LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 if module_ws_found == True:
     LED_STRIP = ws.WS2812_STRIP
 LED_Middle = 136
-	
+
 def main():
     if module_ws_found == True:
         stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
@@ -58,7 +58,7 @@ def main():
         glOrtho(0,pg.display.get_surface().get_width(),pg.display.get_surface().get_height(),0,-1,1) #setup orthographic matrix - (0,0) at top left (1200,800) at bottom right
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-    
+
     handler.addAnimation(Fade(stripe, 2, True, 0))
     handler.addAnimation(RainbowCycle(stripe,5))
     try:
@@ -74,8 +74,8 @@ def main():
                         pg.quit()
                         quit()
             stripe.show()
-            
-        print("KeyboardInterrupting main Thread\n")
+
+        print("\nKeyboardInterrupting main Thread\nByeBye")
 
 
 
@@ -140,7 +140,7 @@ class AnimationHandler(IObserver):
     def start(self, arg):
         print("Started by %s" % arg)
         self.isShutDown = False
-    
+
     def update(self, wait_ms=20):
         counter = 0
         while True and self.interrupted == False:
@@ -149,7 +149,7 @@ class AnimationHandler(IObserver):
                     if event.type == pg.QUIT:
                         pg.quit()
                         quit()
-            
+
             for animation in self._animations:
                 animation.update()
                 if animation.isDead() == True:
@@ -184,6 +184,4 @@ class AnimationHandler(IObserver):
 
 
 if __name__ == '__main__':
-    main() 
-	
-	
+    main()
