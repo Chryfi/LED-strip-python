@@ -1,0 +1,5 @@
+LED-stripe/__pycache__
+LED-stripe/animation/__pycache__
+LED-stripe/observer_pattern/__pycache__
+LED-stripe/threads/__pycache__
+LED-stripe/rpi_ws281x.py
