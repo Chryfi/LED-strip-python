@@ -9,7 +9,7 @@ if "render" in sys.argv:
 import math
 import importlib.util
 
-ws_spec = importlib.util.find_spec("ws")
+ws_spec = importlib.util.find_spec("ws") #for the real led rpi_ws281 library
 module_ws_found = ws_spec is not None
 
 from animation.animation_classes import *
@@ -59,21 +59,16 @@ def main():
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-    handler.addAnimation(Fade(stripe, 2, True, 0))
+    handler.addAnimation(Fade(stripe, 1, True, 0, 255))
     handler.addAnimation(RainbowCycle(stripe,5))
     try:
         while True:
             handler.update()
     except KeyboardInterrupt:
-        fade_out = Fade(stripe, -1, True)
+        fade_out = Fade(stripe, -1, True,stripe.getBrightness(),0)
+        handler.addAnimation(fade_out)
         while fade_out.isDead() == False:
-            fade_out.update()
-            if "render" in sys.argv:
-                for event in pg.event.get():
-                    if event.type == pg.QUIT:
-                        pg.quit()
-                        quit()
-            stripe.show()
+            handler.update()
 
         print("\nKeyboardInterrupting main Thread\nByeBye")
 
@@ -85,6 +80,11 @@ class AnimationHandler(IObserver):
     clear = False
     exit = Event()
     _animations = []
+    #idea: a kind of queue that has effects and animations that should be worked off 
+    #example: fade - work it off until it is dead -> then next element would be either string "stop" (stops loop for keyboardinterrupt) or another animation like pulse
+    #animation like pulse could be added to animations list which then will be runned while the next effect would take place off the queue - fade in
+    #what should be done where could be defined with strings like - "effect" => Fade(...), "animation" => "...", "effect" =>
+    #the elements with animation as index would then be put into animations list and be runned simultaneously while the next effect runs 
     isShutDown = False
 
     def __init__(self, stripe : PixelStrip):

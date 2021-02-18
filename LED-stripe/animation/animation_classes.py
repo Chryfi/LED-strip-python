@@ -48,34 +48,59 @@ class Fade(IAnimation):
     useBrightness = None
     age = 0
     dt = None
+    endBrightness = None
+    startBrightness = None
 
-    def __init__(self, stripe : PixelStrip, velocity, useBrightness = False, startBrightness = 255):
+    def __init__(self, stripe : PixelStrip, velocity, useBrightness = False, startBrightness = 255, endBrightness = 0):
         super().__init__(stripe)
         self.velocity = round(velocity)
         self.dt = 0.1
         self.useBrightness = useBrightness
-        self.stripe.setBrightness(clamp(round(startBrightness), 0, 255))
+
+        if velocity<0:
+            if startBrightness<endBrightness:
+                #when velocity negative and start-end is switched - correct order would be from high number to low number
+                self.startBrightness = endBrightness
+                self.endBrightness = startBrightness
+            else:
+                self.startBrightness = startBrightness
+                self.endBrightness = endBrightness
+        else: #what about velocity==0 case ?
+            if startBrightness>endBrightness:
+                self.startBrightness = endBrightness
+                self.endBrightness = startBrightness
+            else:
+                self.startBrightness = startBrightness
+                self.endBrightness = endBrightness
+            
+        self.stripe.setBrightness(clamp(round(self.startBrightness), 0, 255))
 
     def update(self):
         die = True
 
         if self.useBrightness == True:
             self.stripe.setBrightness(clamp(round(self.stripe.getBrightness()+self.velocity), 0, 255))
-            if self.velocity<0 and self.stripe.getBrightness() != 0:
+
+            if self.velocity<0 and self.stripe.getBrightness() != self.endBrightness:
                 die = False
-            if self.velocity>0 and self.stripe.getBrightness() != 255:
+
+            if self.velocity>0 and self.stripe.getBrightness() != self.endBrightness:
                 die = False
         else:
             for pos in range(self.stripe.numPixels()):
-                #r = clamp(round(self.stripe.getPixelColorRGB(pos).r + self.velocity), 0, 255)
-                #g = clamp(round(self.stripe.getPixelColorRGB(pos).g + self.velocity), 0, 255)
-                #b = clamp(round(self.stripe.getPixelColorRGB(pos).b + self.velocity), 0, 255)
 
-                r = math.floor(min(255,self.stripe.getPixelColorRGB(pos).r *(1+ self.velocity*self.dt)))
-                g = math.floor(min(255,self.stripe.getPixelColorRGB(pos).g *(1+ self.velocity*self.dt)))
-                b = math.floor(min(255,self.stripe.getPixelColorRGB(pos).b *(1+ self.velocity*self.dt)))
+                r = clamp(round(self.stripe.getPixelColorRGB(pos).r + self.velocity), 0, 255)
+                g = clamp(round(self.stripe.getPixelColorRGB(pos).g + self.velocity), 0, 255)
+                b = clamp(round(self.stripe.getPixelColorRGB(pos).b + self.velocity), 0, 255)
 
-                if r != 0 or g != 0 or b != 0:
+                #r = math.floor(min(255,self.stripe.getPixelColorRGB(pos).r *(1+ self.velocity*self.dt)))
+                #g = math.floor(min(255,self.stripe.getPixelColorRGB(pos).g *(1+ self.velocity*self.dt)))
+                #b = math.floor(min(255,self.stripe.getPixelColorRGB(pos).b *(1+ self.velocity*self.dt)))
+
+                if ( r != 0 or g != 0 or b != 0 ) and self.velocity<0:
+                    die = False
+                
+                if ( r != 255 or g != 255 or b != 255 ) and self.velocity>0:
                     die = False
 
                 self.stripe.setPixelColorRGB(pos, r, g, b)
