@@ -7,6 +7,10 @@ if "render" in sys.argv:
     import pygame as pg
     from pygame.locals import *
 import math
+import importlib.util
+
+ws_spec = importlib.util.find_spec("ws")
+module_ws_found = ws_spec is not None
 
 from animation.animation_classes import *
 from threads.thread_classes import *
@@ -20,11 +24,15 @@ LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
 LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
-#LED_STRIP = ws.WS2812_STRIP
+if module_ws_found == True:
+    LED_STRIP = ws.WS2812_STRIP
 LED_Middle = 136
 	
 def main():
-    stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)#, LED_STRIP)
+    if module_ws_found == True:
+        stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_STRIP)
+    else:
+        stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
     # Intialize the library (must be called once before other functions).
     stripe.begin()
     handler = AnimationHandler(stripe)
