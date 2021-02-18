@@ -30,7 +30,7 @@ LED_Middle = 136
 	
 def main():
     if module_ws_found == True:
-        stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_STRIP)
+        stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
     else:
         stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
     # Intialize the library (must be called once before other functions).
@@ -59,12 +59,13 @@ def main():
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
     
+    handler.addAnimation(Fade(stripe, 2, True, 0))
     handler.addAnimation(RainbowCycle(stripe,5))
     try:
         while True:
             handler.update()
     except KeyboardInterrupt:
-        fade_out = Fade(stripe, -0.7)
+        fade_out = Fade(stripe, -1, True)
         while fade_out.isDead() == False:
             fade_out.update()
             if "render" in sys.argv:

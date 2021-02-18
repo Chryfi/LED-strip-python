@@ -49,18 +49,21 @@ class Fade(IAnimation):
     age = 0
     dt = None
 
-    def __init__(self, stripe : PixelStrip, velocity, useBrightness = False):
+    def __init__(self, stripe : PixelStrip, velocity, useBrightness = False, startBrightness = 255):
         super().__init__(stripe)
         self.velocity = round(velocity)
         self.dt = 0.1
         self.useBrightness = useBrightness
+        self.stripe.setBrightness(clamp(round(startBrightness), 0, 255))
 
     def update(self):
         die = True
 
         if self.useBrightness == True:
-            self.stripe.setBrightness(clamp(round(self.stripe.getBrightness+self.velocity, 0, 255)))
-            if self.stripe.getBrightness() != 0:
+            self.stripe.setBrightness(clamp(round(self.stripe.getBrightness()+self.velocity), 0, 255))
+            if self.velocity<0 and self.stripe.getBrightness() != 0:
+                die = False
+            if self.velocity>0 and self.stripe.getBrightness() != 255:
                 die = False
         else:
             for pos in range(self.stripe.numPixels()):
