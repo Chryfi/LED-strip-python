@@ -1,6 +1,7 @@
 import threading
 from observer_pattern.observer_classes import *
 import random
+import traceback
 
 class ConsoleThread(threading.Thread, Observerable):
     observers = []
@@ -16,12 +17,17 @@ class ConsoleThread(threading.Thread, Observerable):
     def run(self):
         try:
             while True:
-                inputstr = input()
-                self.notify(inputstr) #note: self.__class__ needed because python has static like variable inheritance - no real OOP
-        except Exception as e:
-            print("Exception in Thread "+str(self)+" Exception: "+str(e))
+                try:
+                    inputstr = input()
+                    self.notify(inputstr) #note: self.__class__ needed because python has static like variable inheritance - no real OOP
+                except EOFError as e:
+                    print(e)
         except KeyboardInterrupt:
             print("KeyboardInterrupting "+str(self)+"\n")
+        except Exception as e:
+            track = traceback.format_exc()
+            print("Exception in Thread "+str(self)+" Exception: "+str(e)+"\n Stack trace:\n"+track)
+        
     
     def __str__(self):
         return __class__.__name__+" \"%s\" < ThreadID %s, started %s %s >" % (self.name, self.threadID, "daemon" if self.daemon == True else "", self.ident)

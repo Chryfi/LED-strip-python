@@ -61,16 +61,19 @@ def main():
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
     handler.addAnimation(Fade(stripe, 2, True, 0, 255))
-    handler.addAnimation(RainbowCycle(stripe,5))
+    handler.addAnimation(RainbowCycle(stripe, 2))
+    handler.addAnimation(PulseFade(stripe,10, 255, 0))
+    
     try:
         while True:
             handler.update()
     except KeyboardInterrupt:
         fade_out = Fade(stripe, -2, True,stripe.getBrightness(),0)
-        handler.tasks.addTasks([["effect", fade_out], ["stop", None]])
+        fade_in = Fade(stripe, 10, True,0,120)
+        fade_outend = Fade(stripe, -1, True,130,0)
+        handler.tasks.addTasks([["effect", fade_out], ["effect", fade_in], ["effect", fade_outend], ["stop", None]])
 
-        while fade_out.isDead() == False:
-            handler.update()
+        handler.update()
 
         print("\nKeyboardInterrupting main Thread\nByeBye")
 
@@ -168,15 +171,15 @@ class AnimationHandler(IObserver):
                 elif current_task[0] == "stop":
                     self.tasks.pop()
                     break
-
+                
             self.stripe.show()
             self.exit.wait(wait_ms/1000.0)
 
-            """if counter == 5:
+            if counter == 5:
                 counter = 0
                 rgbCycle = RainbowCycle(None,0.2)
-                self.addAnimation(Pulse(random.randint(0,299),self.stripe, 8, -1, rgbCycle))
-            counter = counter + 1"""
+                #self.addAnimation(Pulse(self.stripe, random.randint(0,299), 8, -2, rgbCycle))
+            counter = counter + 1
 
         if self.clear == True:
             for animation in self._animations:
