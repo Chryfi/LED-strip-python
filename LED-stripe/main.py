@@ -12,6 +12,7 @@ import importlib.util
 ws_spec = importlib.util.find_spec("ws") #for the real led rpi_ws281 library
 module_ws_found = ws_spec is not None
 
+from task import *
 from animation.animation_classes import *
 from threads.thread_classes import *
 
@@ -59,14 +60,15 @@ def main():
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-    handler.addAnimation(Fade(stripe, 1, True, 0, 255))
+    handler.addAnimation(Fade(stripe, 2, True, 0, 255))
     handler.addAnimation(RainbowCycle(stripe,5))
     try:
         while True:
             handler.update()
     except KeyboardInterrupt:
-        fade_out = Fade(stripe, -1, True,stripe.getBrightness(),0)
-        handler.addAnimation(fade_out)
+        fade_out = Fade(stripe, -2, True,stripe.getBrightness(),0)
+        handler.tasks.addTasks([["effect", fade_out], ["stop", None]])
+
         while fade_out.isDead() == False:
             handler.update()
 
@@ -85,6 +87,7 @@ class AnimationHandler(IObserver):
     #animation like pulse could be added to animations list which then will be runned while the next effect would take place off the queue - fade in
     #what should be done where could be defined with strings like - "effect" => Fade(...), "animation" => "...", "effect" =>
     #the elements with animation as index would then be put into animations list and be runned simultaneously while the next effect runs 
+    tasks = Tasks() #dictonary not good as it only allows unique keys (maybe own task class with a queue like structure?)
     isShutDown = False
 
     def __init__(self, stripe : PixelStrip):
@@ -154,6 +157,17 @@ class AnimationHandler(IObserver):
                 animation.update()
                 if animation.isDead() == True:
                     self._animations.remove(animation)
+            
+
+            current_task = self.tasks.peek()
+            if current_task != None:
+                if current_task[0] == "effect":
+                    current_task[1].update()
+                    if current_task[1].isDead() == True:
+                        self.tasks.pop()
+                elif current_task[0] == "stop":
+                    self.tasks.pop()
+                    break
 
             self.stripe.show()
             self.exit.wait(wait_ms/1000.0)
