@@ -61,9 +61,10 @@ def main():
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
     handler.addAnimation(Fade(stripe, 2, True, 0, 255))
-    #handler.addAnimation(RainbowCycle(stripe, 2))
-    handler.addAnimation(Nightsky(stripe,5,1, 10,200))
-    handler.addAnimation(PulseFade(stripe,5, 255, 50))
+    colorInterface = ColorInterface(stripe.numPixels())
+    handler.addAnimation(RainbowCycle(stripe, 8, colorInterface))
+    handler.addAnimation(Nightsky(stripe,10,1, 10,200, colorInterface))
+    #handler.addAnimation(PulseFade(stripe,5, 255, 100))
     
     try:
         while True:

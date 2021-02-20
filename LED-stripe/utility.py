@@ -15,6 +15,13 @@ def wheel(pos):
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 
+def toRGB(color):
+    c = lambda: None
+    setattr(c, 'r', color >> 16 & 0xff)
+    setattr(c, 'g', color >> 8  & 0xff)
+    setattr(c, 'b', color    & 0xff)
+    return c
+
 def commandInterpreter(command : str): #complicated way - easy way would be using an array and to assume it has the correct order...
     semicolons = command.split(";")
     for command in semicolons:

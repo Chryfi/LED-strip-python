@@ -22,21 +22,54 @@ class IAnimation:
     def isDead(self):
         return self._dead
         
+class ColorInterface():
+    _colors = []
+
+    def __init__(self, num):
+        for i in range(num):
+            self._colors.append(ColorInterface.Color())
+
+    def setColorRGB(self, pos, r, g, b):
+        self._colors[pos].r = r
+        self._colors[pos].g = g
+        self._colors[pos].b = b
+
+    def setColor(self, pos, color):
+        self._colors[pos].r = toRGB(color).r
+        self._colors[pos].g = toRGB(color).g
+        self._colors[pos].b = toRGB(color).b
+
+    def getColorRGB(self, pos):
+        return self._colors[pos]
+
+    def getColor(self, pos):
+        return Pixel(self._colors[pos].r, self._colors[pos].g, self._colors[pos].b)
+
+    class Color():
+        r = 255
+        g = 255
+        b = 255
         
 class RainbowCycle(IAnimation):
     rate = None
     state = 0
     age = 0
     dt = None
+    colors = None
 
-    def __init__(self, stripe : PixelStrip, rate = 1):
+
+    def __init__(self, stripe : PixelStrip, rate = 1, colors : ColorInterface = None):
         super().__init__(stripe)
         self.rate = rate
         self.dt = 0.5
+        self.colors = colors
 
     def update(self):
         for pos in range(self.stripe.numPixels()):
-            self.stripe.setPixelColor(pos, wheel((int(pos * 256 / self.stripe.numPixels()) + self.state) & 255))
+            if self.colors == None:
+                self.stripe.setPixelColor(pos, wheel((int(pos * 256 / self.stripe.numPixels()) + self.state) & 255))
+            else:
+                self.colors.setColor(pos, wheel((int(pos * 256 / self.stripe.numPixels()) + self.state) & 255))
         self.updateState()
         self.age = self.age + self.dt
 
@@ -88,14 +121,16 @@ class Nightsky(IAnimation):
     velocity = None
     endBrightness = None
     startBrightness = None
+    colors = None
 
-    def __init__(self, stripe : PixelStrip, velocity, rate, startBrightness = 0, endBrightness = 255):
+    def __init__(self, stripe : PixelStrip, velocity, rate, startBrightness = 0, endBrightness = 255, colors : ColorInterface = None):
         super().__init__(stripe)
         self.velocity = round(velocity)
         self.rate = round(rate)
         self.dt = 0.5
         self.startBrightness = min(startBrightness,endBrightness)
         self.endBrightness = max(startBrightness,endBrightness)
+        self.colors = colors
 
     def update(self):
         if (self.age/self.dt)%self.rate == 0:
@@ -103,7 +138,7 @@ class Nightsky(IAnimation):
             #while any(star.position == rand for star in self._stars): #can turn out performance heavy
             #    rand = round(random.randrange(0,self.stripe.numPixels()-1))
             if not any(star.position == rand for star in self._stars):
-                self._stars.append(Star(self.stripe, round(random.randrange(0,self.stripe.numPixels()-1)), self.velocity, self.startBrightness, self.endBrightness))
+                self._stars.append(Star(self.stripe, round(random.randrange(0,self.stripe.numPixels()-1)), self.velocity, self.startBrightness, self.endBrightness, self.colors))
         for star in self._stars:
             star.update()
             if star.isDead():
@@ -118,8 +153,9 @@ class Star(IAnimation):
     currentBrightness = None
     velocity = None
     position = None
+    colors = None
 
-    def __init__(self, stripe : PixelStrip, position, velocity, startBrightness = 0, endBrightness = 255):
+    def __init__(self, stripe : PixelStrip, position, velocity, startBrightness = 0, endBrightness = 255, colors : ColorInterface = None):
         super().__init__(stripe)
         self.velocity = abs(round(velocity))
         self.dt = 0.5
@@ -127,21 +163,23 @@ class Star(IAnimation):
         self.startBrightness = min(startBrightness,endBrightness)
         self.endBrightness = max(startBrightness,endBrightness)
         self.currentBrightness = self.startBrightness
+        self.colors = colors
 
 
     def update(self):
         self.currentBrightness = clamp(round(self.currentBrightness+self.velocity), 0, max(self.endBrightness, self.startBrightness))
         brightFactor = self.currentBrightness/255
-        self.stripe.setPixelColorRGB(self.position, round(255*brightFactor), round(255*brightFactor), round(255*brightFactor))
 
+        if self.colors == None:
+            self.stripe.setPixelColorRGB(self.position, round(255*brightFactor), round(255*brightFactor), round(255*brightFactor))
+        else:
+            self.stripe.setPixelColorRGB(self.position, round(self.colors.getColorRGB(self.position).r*brightFactor), round(self.colors.getColorRGB(self.position).g*brightFactor), round(self.colors.getColorRGB(self.position).b*brightFactor))
+        
         if self.velocity>0 and self.currentBrightness >= self.endBrightness:
             self.velocity = -self.velocity
 
         if self.velocity<0 and self.currentBrightness <= self.startBrightness:
-            if self.startBrightness != 0 and self.currentBrightness >= 0:
-                if round(self.velocity) != 0:
-                    self.velocity = self.velocity*0.98
-            else:
+            if self.currentBrightness == 0:
                 self._dead = True
         
         self.age = self.age + self.dt
