@@ -62,9 +62,9 @@ def main():
 
     handler.addAnimation(Fade(stripe, 2, True, 0, 255))
     colorInterface = ColorInterface(stripe.numPixels())
-    handler.addAnimation(RainbowCycle(stripe, 8, colorInterface))
-    handler.addAnimation(Nightsky(stripe,10,1, 10,200, colorInterface))
-    #handler.addAnimation(PulseFade(stripe,5, 255, 100))
+    handler.addAnimation(RainbowPulse(stripe, 0.2, colorInterface))
+    handler.addAnimation(Nightsky(stripe,16,1, 0, 255, colorInterface))
+    handler.addAnimation(PulseFade(stripe,5, 255, 50))
     
     try:
         while True:

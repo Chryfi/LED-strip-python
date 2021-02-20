@@ -16,7 +16,7 @@ class IAnimation:
     def reset(self): #probably stupid - may be deprecated soon
         pass
 
-    def clone(self):
+    def clone(self):  #probably stupid - may be deprecated soon
         pass
 
     def isDead(self):
@@ -40,23 +40,32 @@ class ColorInterface():
         self._colors[pos].b = toRGB(color).b
 
     def getColorRGB(self, pos):
-        return self._colors[pos]
+        #pass values though lambda to avoid accidently changing object's colors directly into bad values like 300
+        c = lambda: None 
+        setattr(c, 'r', self._colors[pos].r)
+        setattr(c, 'g', self._colors[pos].g)
+        setattr(c, 'b', self._colors[pos].b)
+        return c
 
     def getColor(self, pos):
-        return Pixel(self._colors[pos].r, self._colors[pos].g, self._colors[pos].b)
+        return Color(self._colors[pos].r, self._colors[pos].g, self._colors[pos].b)
+
+    def draw(self, stripe : PixelStrip):
+        for i in range(stripe.numPixels()):
+            stripe.setPixelColorRGB(i, self._colors[i].r, self._colors[i].g, self._colors[i].b)
 
     class Color():
         r = 255
         g = 255
         b = 255
-        
-class RainbowCycle(IAnimation):
-    rate = None
-    state = 0
-    age = 0
+
+
+class RainbowPulse(IAnimation):
     dt = None
     colors = None
-
+    age = 0
+    rate = None
+    state = 0
 
     def __init__(self, stripe : PixelStrip, rate = 1, colors : ColorInterface = None):
         super().__init__(stripe)
@@ -67,14 +76,42 @@ class RainbowCycle(IAnimation):
     def update(self):
         for pos in range(self.stripe.numPixels()):
             if self.colors == None:
-                self.stripe.setPixelColor(pos, wheel((int(pos * 256 / self.stripe.numPixels()) + self.state) & 255))
+                self.stripe.setPixelColor(pos, wheel(round(self.state)))
             else:
-                self.colors.setColor(pos, wheel((int(pos * 256 / self.stripe.numPixels()) + self.state) & 255))
+                self.colors.setColor(pos, wheel(round(self.state)))
+        self.updateState()
+        self.age = self.age + self.dt
+    
+    def updateState(self):
+        self.state = self.state + self.rate
+        if self.state > 256:
+            self.state = 0
+
+
+class RainbowCycle(IAnimation):
+    rate = None
+    state = 0
+    age = 0
+    dt = None
+    colors = None
+
+    def __init__(self, stripe : PixelStrip, rate = 1, colors : ColorInterface = None):
+        super().__init__(stripe)
+        self.rate = rate
+        self.dt = 0.5
+        self.colors = colors
+
+    def update(self):
+        for pos in range(self.stripe.numPixels()):
+            if self.colors == None:
+                self.stripe.setPixelColor(pos, wheel(round(int(pos * 256 / self.stripe.numPixels()) + self.state) & 255))
+            else:
+                self.colors.setColor(pos, wheel(round(int(pos * 256 / self.stripe.numPixels()) + self.state) & 255))
         self.updateState()
         self.age = self.age + self.dt
 
     def updateState(self):
-        self.state = round(self.state + self.rate)
+        self.state = self.state + self.rate
         if self.state > 256:
             self.state = 0
 
@@ -299,7 +336,7 @@ class Pulse(IAnimation):
             if self.rgbCycle == None:
                 self.stripe.setPixelColor(pos, wheel((int((pos) * 256 / self.stripe.numPixels())) & 255))
             else:
-                self.stripe.setPixelColor(pos, wheel((int((pos) * 256 / self.stripe.numPixels())+self.rgbCycle.state) & 255))
+                self.stripe.setPixelColor(pos, wheel(round(int((pos) * 256 / self.stripe.numPixels())+self.rgbCycle.state) & 255))
 
             self.stripe.setPixelColorRGB(pos, round(self.stripe.getPixelColorRGB(pos).r*self.curve), round(self.stripe.getPixelColorRGB(pos).g*self.curve), round(self.stripe.getPixelColorRGB(pos).b*self.curve))
         
