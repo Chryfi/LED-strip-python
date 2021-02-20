@@ -1,6 +1,5 @@
 import threading
 from observer_pattern.observer_classes import *
-import random
 import traceback
 
 class ConsoleThread(threading.Thread, Observerable):

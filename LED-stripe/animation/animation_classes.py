@@ -2,6 +2,7 @@ from utility import *
 from rpi_ws281x import *
 import numpy as np
 import time
+import random
 
 class IAnimation:
 
@@ -79,7 +80,71 @@ class PulseFade(IAnimation):
         self.age = self.age + self.dt
 
         
+class Nightsky(IAnimation):
+    _stars = []
+    age = 0
+    dt = None
+    rate = None
+    velocity = None
+    endBrightness = None
+    startBrightness = None
 
+    def __init__(self, stripe : PixelStrip, velocity, rate, startBrightness = 0, endBrightness = 255):
+        super().__init__(stripe)
+        self.velocity = round(velocity)
+        self.rate = round(rate)
+        self.dt = 0.5
+        self.startBrightness = min(startBrightness,endBrightness)
+        self.endBrightness = max(startBrightness,endBrightness)
+
+    def update(self):
+        if (self.age/self.dt)%self.rate == 0:
+            rand = round(random.randrange(0,self.stripe.numPixels()-1))
+            #while any(star.position == rand for star in self._stars): #can turn out performance heavy
+            #    rand = round(random.randrange(0,self.stripe.numPixels()-1))
+            if not any(star.position == rand for star in self._stars):
+                self._stars.append(Star(self.stripe, round(random.randrange(0,self.stripe.numPixels()-1)), self.velocity, self.startBrightness, self.endBrightness))
+        for star in self._stars:
+            star.update()
+            if star.isDead():
+                self._stars.remove(star)
+        self.age = self.age + self.dt
+
+class Star(IAnimation):
+    age = 0
+    dt = None
+    endBrightness = None
+    startBrightness = None
+    currentBrightness = None
+    velocity = None
+    position = None
+
+    def __init__(self, stripe : PixelStrip, position, velocity, startBrightness = 0, endBrightness = 255):
+        super().__init__(stripe)
+        self.velocity = abs(round(velocity))
+        self.dt = 0.5
+        self.position = position
+        self.startBrightness = min(startBrightness,endBrightness)
+        self.endBrightness = max(startBrightness,endBrightness)
+        self.currentBrightness = self.startBrightness
+
+
+    def update(self):
+        self.currentBrightness = clamp(round(self.currentBrightness+self.velocity), 0, max(self.endBrightness, self.startBrightness))
+        brightFactor = self.currentBrightness/255
+        self.stripe.setPixelColorRGB(self.position, round(255*brightFactor), round(255*brightFactor), round(255*brightFactor))
+
+        if self.velocity>0 and self.currentBrightness >= self.endBrightness:
+            self.velocity = -self.velocity
+
+        if self.velocity<0 and self.currentBrightness <= self.startBrightness:
+            if self.startBrightness != 0 and self.currentBrightness >= 0:
+                if round(self.velocity) != 0:
+                    self.velocity = self.velocity*0.98
+            else:
+                self._dead = True
+        
+        self.age = self.age + self.dt
 
 class Fade(IAnimation):
     velocity = None
@@ -97,20 +162,11 @@ class Fade(IAnimation):
         self.useBrightness = useBrightness
 
         if velocity<0:
-            if startBrightness<endBrightness:
-                #when velocity negative and start-end is switched - correct order would be from high number to low number
-                self.startBrightness = endBrightness
-                self.endBrightness = startBrightness
-            else:
-                self.startBrightness = startBrightness
-                self.endBrightness = endBrightness
+            self.startBrightness = max(startBrightness,endBrightness)
+            self.endBrightness = min(startBrightness,endBrightness)
         else: #what about velocity==0 case ?
-            if startBrightness>endBrightness:
-                self.startBrightness = endBrightness
-                self.endBrightness = startBrightness
-            else:
-                self.startBrightness = startBrightness
-                self.endBrightness = endBrightness
+            self.startBrightness = min(startBrightness,endBrightness)
+            self.endBrightness = max(startBrightness,endBrightness)
 
         self.currentBrightness = self.startBrightness
         self.stripe.setBrightness(clamp(round(self.startBrightness), 0, 255))
