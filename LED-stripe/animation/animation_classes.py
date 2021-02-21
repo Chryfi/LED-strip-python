@@ -23,55 +23,42 @@ class IAnimation:
         return self._dead
         
 class ColorInterface():
-    _colors = []
 
-    def __init__(self, num):
+    def __init__(self, num, defaultColor = Color(255, 255, 255)):
+        self._colors = []
         for i in range(num):
-            self._colors.append(ColorInterface.Color())
+            self._colors.append(defaultColor)
 
     def setColorRGB(self, pos, r, g, b):
-        self._colors[pos].r = r
-        self._colors[pos].g = g
-        self._colors[pos].b = b
+        self._colors[pos] = Color(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255))
 
     def setColor(self, pos, color):
-        self._colors[pos].r = toRGB(color).r
-        self._colors[pos].g = toRGB(color).g
-        self._colors[pos].b = toRGB(color).b
+        self._colors[pos] = color
 
     def getColorRGB(self, pos):
-        #pass values though lambda to avoid accidently changing object's colors directly into bad values like 300
         c = lambda: None 
-        setattr(c, 'r', self._colors[pos].r)
-        setattr(c, 'g', self._colors[pos].g)
-        setattr(c, 'b', self._colors[pos].b)
+        setattr(c, 'r', self._colors[pos] >> 16 & 0xff)
+        setattr(c, 'g', self._colors[pos] >> 8  & 0xff)
+        setattr(c, 'b', self._colors[pos] & 0xff)
         return c
 
     def getColor(self, pos):
-        return Color(self._colors[pos].r, self._colors[pos].g, self._colors[pos].b)
+        return self._colors[pos]
 
     def draw(self, stripe : PixelStrip):
-        for i in range(stripe.numPixels()):
-            stripe.setPixelColorRGB(i, self._colors[i].r, self._colors[i].g, self._colors[i].b)
-
-    class Color():
-        r = 255
-        g = 255
-        b = 255
+        for pos in range(stripe.numPixels()):
+            stripe.setPixelColor(i, self._colors[pos])
 
 
 class RainbowPulse(IAnimation):
-    dt = None
-    colors = None
-    age = 0
-    rate = None
-    state = 0
 
     def __init__(self, stripe : PixelStrip, rate = 1, colors : ColorInterface = None):
         super().__init__(stripe)
         self.rate = rate
         self.dt = 0.5
         self.colors = colors
+        self.state = 0
+        self.age = 0
 
     def update(self):
         for pos in range(self.stripe.numPixels()):
@@ -89,17 +76,14 @@ class RainbowPulse(IAnimation):
 
 
 class RainbowCycle(IAnimation):
-    rate = None
-    state = 0
-    age = 0
-    dt = None
-    colors = None
 
     def __init__(self, stripe : PixelStrip, rate = 1, colors : ColorInterface = None):
         super().__init__(stripe)
         self.rate = rate
         self.dt = 0.5
         self.colors = colors
+        self.state = 0
+        self.age = 0
 
     def update(self):
         for pos in range(self.stripe.numPixels()):
@@ -116,13 +100,6 @@ class RainbowCycle(IAnimation):
             self.state = 0
 
 class PulseFade(IAnimation):
-    velocity = None
-    state = 0
-    age = 0
-    dt = None
-    endBrightness = None
-    startBrightness = None
-
     def __init__(self, stripe : PixelStrip, velocity, startBrightness = 255, endBrightness = 0):
         super().__init__(stripe)
         self.velocity = round(velocity)
@@ -136,6 +113,8 @@ class PulseFade(IAnimation):
 
         self.currentBrightness = self.startBrightness
         self.stripe.setBrightness(clamp(round(self.startBrightness), 0, 255))
+        self.state = 0
+        self.age = 0
 
     def update(self):
         self.currentBrightness = clamp(round(self.currentBrightness+self.velocity), min(self.endBrightness, self.startBrightness), max(self.endBrightness, self.startBrightness))
@@ -151,14 +130,6 @@ class PulseFade(IAnimation):
 
         
 class Nightsky(IAnimation):
-    _stars = []
-    age = 0
-    dt = None
-    rate = None
-    velocity = None
-    endBrightness = None
-    startBrightness = None
-    colors = None
 
     def __init__(self, stripe : PixelStrip, velocity, rate, startBrightness = 0, endBrightness = 255, colors : ColorInterface = None):
         super().__init__(stripe)
@@ -168,6 +139,8 @@ class Nightsky(IAnimation):
         self.startBrightness = min(startBrightness,endBrightness)
         self.endBrightness = max(startBrightness,endBrightness)
         self.colors = colors
+        self._stars = []
+        self.age = 0
 
     def update(self):
         if (self.age/self.dt)%self.rate == 0:
@@ -183,14 +156,6 @@ class Nightsky(IAnimation):
         self.age = self.age + self.dt
 
 class Star(IAnimation):
-    age = 0
-    dt = None
-    endBrightness = None
-    startBrightness = None
-    currentBrightness = None
-    velocity = None
-    position = None
-    colors = None
 
     def __init__(self, stripe : PixelStrip, position, velocity, startBrightness = 0, endBrightness = 255, colors : ColorInterface = None):
         super().__init__(stripe)
@@ -201,6 +166,7 @@ class Star(IAnimation):
         self.endBrightness = max(startBrightness,endBrightness)
         self.currentBrightness = self.startBrightness
         self.colors = colors
+        self.age = 0
 
 
     def update(self):
@@ -222,17 +188,10 @@ class Star(IAnimation):
         self.age = self.age + self.dt
 
 class Fade(IAnimation):
-    velocity = None
-    useBrightness = None
-    age = 0
-    dt = None
-    endBrightness = None
-    startBrightness = None
-    currentBrightness = None
 
     def __init__(self, stripe : PixelStrip, velocity, useBrightness = False, startBrightness = 255, endBrightness = 0):
         super().__init__(stripe)
-        self.velocity = round(velocity)
+        self.velocity = velocity
         self.dt = 0.5
         self.useBrightness = useBrightness
 
@@ -245,14 +204,15 @@ class Fade(IAnimation):
 
         self.currentBrightness = self.startBrightness
         self.stripe.setBrightness(clamp(round(self.startBrightness), 0, 255))
+        self.age = 0
 
     def update(self):
         die = True
 
         if self.useBrightness == True:
-            self.currentBrightness = clamp(round(self.currentBrightness+self.velocity), min(self.endBrightness, self.startBrightness), max(self.endBrightness, self.startBrightness))
-
-            self.stripe.setBrightness(self.currentBrightness)
+            self.currentBrightness = self.currentBrightness+self.velocity
+            
+            self.stripe.setBrightness(clamp(round(self.currentBrightness), min(self.endBrightness, self.startBrightness), max(self.endBrightness, self.startBrightness)))
 
             if self.velocity<0 and self.currentBrightness > self.endBrightness:
                 die = False
@@ -285,29 +245,21 @@ class Fade(IAnimation):
         
 
 class Pulse(IAnimation):
-    middlePos = None
-    leftPos = None
-    rightPos = None
-    curve = 1
-    velocity = None # 1 pixel/ 1 sec
-    acceleration = None
-    age = 0
-    dt = None
-    deathAge = -1
-    copy = None
-    rgbCycle = None
 
-    def __init__(self, stripe : PixelStrip, middlePos, velocity = 3, acceleration = -0.5, rgbCycle: RainbowCycle = None, makeCopy = True):
+    def __init__(self, stripe : PixelStrip, middlePos, velocity = 3, acceleration = -0.5, curveFactor = 0.5, colors : ColorInterface = None):
         super().__init__(stripe)
         self.middlePos = middlePos
         self.leftPos = middlePos
         self.rightPos = middlePos
-        self.velocity = velocity
+        self.velocity = abs(velocity)
+        self.velocity0 = abs(velocity)
         self.acceleration = acceleration
         self.dt = 0.5 #timestep
-        self.rgbCycle = rgbCycle
-        if makeCopy == True:
-            self.copy = self.clone()
+        self.curveFactor = curveFactor
+        self.colors = colors
+        self.deathAge = -1
+        self.age = 0
+        self.curve = 1
     
     def update(self):
         self.leftPos = clamp(round(self.leftPos - self.velocity*self.dt), 0, self.stripe.numPixels()-1)
@@ -318,36 +270,39 @@ class Pulse(IAnimation):
         if self.velocity < 0:
             self.velocity = 0
 
-        #apply curve - fade from middle to edge
+        #apply curve - fade from middle to left edge
         for pos in range(self.middlePos, self.leftPos-1, -1):
-            self.curve = np.exp(-self.age*(pos-self.leftPos)/35)
+            self.curve = np.exp(-self.age*(pos-self.leftPos) * self.curveFactor)
 
-            if self.rgbCycle == None:
+            if self.colors == None:
                 self.stripe.setPixelColor(pos, wheel((int((pos) * 256 / self.stripe.numPixels())) & 255))
             else:
-                self.stripe.setPixelColor(pos, wheel((int((pos) * 256 / self.stripe.numPixels())+self.rgbCycle.state) & 255))
+                self.stripe.setPixelColor(pos, self.colors.getColor(pos))
 
             self.stripe.setPixelColorRGB(pos, round(self.stripe.getPixelColorRGB(pos).r*self.curve), round(self.stripe.getPixelColorRGB(pos).g*self.curve), round(self.stripe.getPixelColorRGB(pos).b*self.curve))
 
-        #apply curve - fade from middle to edge
+        #apply curve - fade from middle to right edge
         for pos in range(self.middlePos, self.rightPos+1, 1):
-            self.curve = np.exp(-self.age*(self.rightPos-pos)/35)
+            self.curve = np.exp(-self.age*(self.rightPos-pos) * self.curveFactor)
             
-            if self.rgbCycle == None:
+            if self.colors == None:
                 self.stripe.setPixelColor(pos, wheel((int((pos) * 256 / self.stripe.numPixels())) & 255))
             else:
-                self.stripe.setPixelColor(pos, wheel(round(int((pos) * 256 / self.stripe.numPixels())+self.rgbCycle.state) & 255))
+                self.stripe.setPixelColor(pos, self.colors.getColor(pos))
 
             self.stripe.setPixelColorRGB(pos, round(self.stripe.getPixelColorRGB(pos).r*self.curve), round(self.stripe.getPixelColorRGB(pos).g*self.curve), round(self.stripe.getPixelColorRGB(pos).b*self.curve))
         
-        self.curve = np.exp(-self.age/30)
-        self.stripe.setPixelColorRGB(self.leftPos, round(self.stripe.getPixelColorRGB(self.leftPos).r*self.curve), round(self.stripe.getPixelColorRGB(self.leftPos).g*self.curve), round(self.stripe.getPixelColorRGB(self.leftPos).b*self.curve))
+        #self.curve = np.exp(-self.age/30)
+        #self.stripe.setPixelColorRGB(self.leftPos, round(self.stripe.getPixelColorRGB(self.leftPos).r*self.curve), round(self.stripe.getPixelColorRGB(self.leftPos).g*self.curve), round(self.stripe.getPixelColorRGB(self.leftPos).b*self.curve))
 
-        self.stripe.setPixelColorRGB(self.rightPos, round(self.stripe.getPixelColorRGB(self.rightPos).r*self.curve), round(self.stripe.getPixelColorRGB(self.rightPos).g*self.curve), round(self.stripe.getPixelColorRGB(self.rightPos).b*self.curve))
+        #self.stripe.setPixelColorRGB(self.rightPos, round(self.stripe.getPixelColorRGB(self.rightPos).r*self.curve), round(self.stripe.getPixelColorRGB(self.rightPos).g*self.curve), round(self.stripe.getPixelColorRGB(self.rightPos).b*self.curve))
             
-
+        #calculate n steps when velocity is fraction of velocity0
+        #if self.acceleration!=0:
+        #    n = (self.velocity0*(0.5-1))/(self.acceleration*self.dt)
+            
         #fade pulse out
-        if self.velocity < -self.acceleration*0.5:
+        if ( self.acceleration<0 and self.velocity/self.velocity0<0.5 ) or ( self.leftPos==0 and self.rightPos==self.stripe.numPixels()-1 ):
             if self.deathAge == -1:
                 self.deathAge = self.age
 
@@ -358,28 +313,4 @@ class Pulse(IAnimation):
         if self.stripe.getPixelColorRGB(self.leftPos).r == 0 and self.stripe.getPixelColorRGB(self.leftPos).g == 0 and self.stripe.getPixelColorRGB(self.leftPos).b == 0:
             self._dead = True
             
-        if self.rgbCycle != None:
-            self.rgbCycle.updateState()
-            
         self.age = self.age + self.dt
-
-    def reset(self):
-        self.leftPos = self.copy.leftPos
-        self.rightPos = self.copy.rightPos
-        self.curve = self.copy.curve
-        self.velocity = self.copy.velocity
-        self.age = self.copy.age
-        self.deathAge = self.copy.deathAge
-        self._dead = self.copy._dead
-        self.rgbCycle = self.copy.rgbCycle
-
-    def clone(self):
-        c = Pulse(self.middlePos, self.stripe, self.velocity, self.acceleration, self.rgbCycle, False)
-        c.leftPos = self.leftPos
-        c.rightPos = self.rightPos
-        c.curve = self.curve
-        c.velocity = self.velocity
-        c.age = self.age
-        c.deathAge = self.deathAge
-        c._dead = self._dead
-        return c

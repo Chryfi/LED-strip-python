@@ -60,20 +60,22 @@ def main():
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-    handler.addAnimation(Fade(stripe, 2, True, 0, 255))
+    handler.addAnimation(Fade(stripe, 4, True, 0, 255))
     colorInterface = ColorInterface(stripe.numPixels())
-    handler.addAnimation(RainbowPulse(stripe, 0.2, colorInterface))
-    handler.addAnimation(Nightsky(stripe,16,1, 0, 255, colorInterface))
-    handler.addAnimation(PulseFade(stripe,5, 255, 50))
+    handler.addAnimation(RainbowPulse(stripe, 0.5))
+    #handler.addAnimation(RainbowCycle(stripe, 0))
+    #handler.addAnimation(Nightsky(stripe,4,1, 0, 255, colorInterface))
+    #handler.addAnimation(PulseFade(stripe,5, 255, 50))
     
     try:
         while True:
             handler.update()
     except KeyboardInterrupt:
-        fade_out = Fade(stripe, -2, True,0,stripe.getBrightness())
-        fade_in = Fade(stripe, 10, True,0,120)
-        fade_outend = Fade(stripe, -1, True,130,0)
-        handler.tasks.addTasks([["effect", fade_out], ["effect", fade_in], ["effect", fade_outend], ["stop", None]])
+        #fade_out = Fade(stripe, -2, True,0,stripe.getBrightness())
+        #fade_in = Fade(stripe, 10, True,0,120)
+        #fade_outend = Fade(stripe, -1, True,130,0)
+        #handler.tasks.addTasks([["effect", fade_out], ["effect", fade_in], ["effect", fade_outend], ["stop", None]])
+        handler.tasks.addTasks([["effect", Pulse(stripe, 149,14, -0.25, 0.0075, ColorInterface(stripe.numPixels(), Color(0, 255, 255)))], ["stop", None]])
 
         handler.update()
 
