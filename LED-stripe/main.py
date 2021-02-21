@@ -60,12 +60,17 @@ def main():
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-    handler.addAnimation(Fade(stripe, 4, True, 0, 255))
-    colorInterface = ColorInterface(stripe.numPixels())
-    handler.addAnimation(RainbowPulse(stripe, 0.5))
-    #handler.addAnimation(RainbowCycle(stripe, 0))
-    #handler.addAnimation(Nightsky(stripe,4,1, 0, 255, colorInterface))
-    #handler.addAnimation(PulseFade(stripe,5, 255, 50))
+    
+    handler.addAnimation(Fade(stripe, 2, True, 0, 255))
+    
+    colorInterface = ColorInterface(stripe.numPixels())  
+    handler.addAnimation(RainbowPulse(stripe, 0.5, colorInterface))
+    handler.addAnimation(Nightsky(stripe,6,2, 0, 255, colorInterface))
+    #handler.addAnimation(PulseFade(stripe,6, 255, 100))
+
+    #colorInterface2 = ColorInterface(stripe.numPixels())
+    #handler.addAnimation(RainbowCycle(stripe, 25, colorInterface2))
+    #handler.tasks.addTask(["effect", Pulse(stripe, 149,11, -0.25, 0.0075, colorInterface2)])
     
     try:
         while True:
@@ -75,7 +80,9 @@ def main():
         #fade_in = Fade(stripe, 10, True,0,120)
         #fade_outend = Fade(stripe, -1, True,130,0)
         #handler.tasks.addTasks([["effect", fade_out], ["effect", fade_in], ["effect", fade_outend], ["stop", None]])
-        handler.tasks.addTasks([["effect", Pulse(stripe, 149,14, -0.25, 0.0075, ColorInterface(stripe.numPixels(), Color(0, 255, 255)))], ["stop", None]])
+        colorInterface3 = ColorInterface(stripe.numPixels(), Color(0, 255,255))
+        #handler.addAnimation(RainbowPulse(stripe, 25, colorInterface3))
+        handler.tasks.addTasks([["effect", Pulse(stripe, 149,13.5, -0.5, 0.005, colorInterface3)], ["stop", None]])
 
         handler.update()
 
@@ -85,20 +92,15 @@ def main():
 
 
 class AnimationHandler(IObserver):
-    interrupted = False
-    clear = False
-    exit = Event()
-    _animations = []
-    #idea: a kind of queue that has effects and animations that should be worked off 
-    #example: fade - work it off until it is dead -> then next element would be either string "stop" (stops loop for keyboardinterrupt) or another animation like pulse
-    #animation like pulse could be added to animations list which then will be runned while the next effect would take place off the queue - fade in
-    #what should be done where could be defined with strings like - "effect" => Fade(...), "animation" => "...", "effect" =>
-    #the elements with animation as index would then be put into animations list and be runned simultaneously while the next effect runs 
-    tasks = Tasks() #dictonary not good as it only allows unique keys (maybe own task class with a queue like structure?)
-    isShutDown = False
 
     def __init__(self, stripe : PixelStrip):
+        self.interrupted = False
+        self.clear = False
+        self.isShutDown = False
+        self.exit = Event()
         self.stripe = stripe
+        self._animations = []
+        self.tasks = Tasks()
 
     def addAnimation(self, animation : IAnimation):
         self._animations.append(animation)
@@ -153,6 +155,8 @@ class AnimationHandler(IObserver):
 
     def update(self, wait_ms=20):
         counter = 0
+        colorInterface4 = ColorInterface(self.stripe.numPixels())
+        #self.addAnimation(RainbowCycle(self.stripe, 10, colorInterface4))
         while True and self.interrupted == False:
             if "render" in sys.argv:
                 for event in pg.event.get():
@@ -179,10 +183,8 @@ class AnimationHandler(IObserver):
             self.stripe.show()
             self.exit.wait(wait_ms/1000.0)
 
-            if counter == 5:
-                counter = 0
-                rgbCycle = RainbowCycle(None,0.2)
-                #self.addAnimation(Pulse(self.stripe, random.randint(0,299), 8, -2, rgbCycle))
+            #if counter%15==0:
+                #self.addAnimation(Pulse(self.stripe, random.randint(120,299),4, -0.275, 0.035, colorInterface4))
             counter = counter + 1
 
         if self.clear == True:

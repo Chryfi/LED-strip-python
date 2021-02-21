@@ -71,7 +71,7 @@ class RainbowPulse(IAnimation):
     
     def updateState(self):
         self.state = self.state + self.rate
-        if self.state > 256:
+        if round(self.state) > 255:
             self.state = 0
 
 
@@ -96,7 +96,7 @@ class RainbowCycle(IAnimation):
 
     def updateState(self):
         self.state = self.state + self.rate
-        if self.state > 256:
+        if round(self.state) > 255:
             self.state = 0
 
 class PulseFade(IAnimation):
@@ -262,16 +262,16 @@ class Pulse(IAnimation):
         self.curve = 1
     
     def update(self):
-        self.leftPos = clamp(round(self.leftPos - self.velocity*self.dt), 0, self.stripe.numPixels()-1)
-        self.rightPos = clamp(round(self.rightPos + self.velocity*self.dt), 0, self.stripe.numPixels()-1)
+        self.leftPos = round(self.leftPos - self.velocity*self.dt)
+        self.rightPos = round(self.rightPos + self.velocity*self.dt)
 
         self.velocity = self.velocity + self.acceleration*self.dt
 
         if self.velocity < 0:
             self.velocity = 0
-
+        
         #apply curve - fade from middle to left edge
-        for pos in range(self.middlePos, self.leftPos-1, -1):
+        for pos in range(self.middlePos, clamp(self.leftPos, 0, self.stripe.numPixels()-1)-1, -1):
             self.curve = np.exp(-self.age*(pos-self.leftPos) * self.curveFactor)
 
             if self.colors == None:
@@ -282,7 +282,7 @@ class Pulse(IAnimation):
             self.stripe.setPixelColorRGB(pos, round(self.stripe.getPixelColorRGB(pos).r*self.curve), round(self.stripe.getPixelColorRGB(pos).g*self.curve), round(self.stripe.getPixelColorRGB(pos).b*self.curve))
 
         #apply curve - fade from middle to right edge
-        for pos in range(self.middlePos, self.rightPos+1, 1):
+        for pos in range(self.middlePos, clamp(self.rightPos, 0, self.stripe.numPixels()-1)+1, 1):
             self.curve = np.exp(-self.age*(self.rightPos-pos) * self.curveFactor)
             
             if self.colors == None:
@@ -302,15 +302,15 @@ class Pulse(IAnimation):
         #    n = (self.velocity0*(0.5-1))/(self.acceleration*self.dt)
             
         #fade pulse out
-        if ( self.acceleration<0 and self.velocity/self.velocity0<0.5 ) or ( self.leftPos==0 and self.rightPos==self.stripe.numPixels()-1 ):
+        if ( self.acceleration<0 and self.velocity/self.velocity0<0.5 ) or ( self.leftPos<=0 and self.rightPos>=self.stripe.numPixels()-1 ):
             if self.deathAge == -1:
                 self.deathAge = self.age
 
-            for pos in range(self.leftPos, self.rightPos+1, 1):
+            for pos in range(clamp(self.leftPos, 0, self.stripe.numPixels()-1), clamp(self.rightPos, 0, self.stripe.numPixels()-1)+1, 1):
                 self.curve = np.exp((self.deathAge-self.age)/2)
                 self.stripe.setPixelColorRGB(pos, round(self.stripe.getPixelColorRGB(pos).r*self.curve), round(self.stripe.getPixelColorRGB(pos).g*self.curve), round(self.stripe.getPixelColorRGB(pos).b*self.curve))
             
-        if self.stripe.getPixelColorRGB(self.leftPos).r == 0 and self.stripe.getPixelColorRGB(self.leftPos).g == 0 and self.stripe.getPixelColorRGB(self.leftPos).b == 0:
+        if self.stripe.getPixelColorRGB(clamp(self.leftPos, 0, self.stripe.numPixels()-1)).r == 0 and self.stripe.getPixelColorRGB(clamp(self.leftPos, 0, self.stripe.numPixels()-1)).g == 0 and self.stripe.getPixelColorRGB(clamp(self.leftPos, 0, self.stripe.numPixels()-1)).b == 0:
             self._dead = True
             
         self.age = self.age + self.dt
