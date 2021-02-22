@@ -15,6 +15,7 @@ module_ws_found = ws_spec is not None
 from task import *
 from animation.animation_classes import *
 from threads.thread_classes import *
+from command import *
 
 # LED strip configuration:
 LED_COUNT      = 300      # Number of LED pixels.
@@ -106,20 +107,7 @@ class AnimationHandler(IObserver):
         self._animations.append(animation)
 
     def notify(self, o : Observerable, arg):
-        if arg == "stop":
-            self.interrupt(str(o))
-        elif arg == "restart":
-            self.restart(str(o))
-        elif arg == "clear":
-            self.clearStripe()
-            self.interrupt(str(o))
-            self.clear = True
-        elif arg == "shutdown":
-            self.shutdown(str(o))
-        elif arg == "start":
-            self.start(str(o))
-        else:
-            print("StripeAnimation Error: argument '"+arg+"' given by "+str(o)+" not known!")
+        print("StripeAnimation got notified by "+str(o)+" with the arguments "+str(arg))
 
     def restart(self, arg):
         if self.interrupted == True and self.isShutDown == False:
@@ -141,6 +129,7 @@ class AnimationHandler(IObserver):
             print("AnimationHandler is shutdown!")
         elif self.interrupted == True:
             print("Already interrupted!")
+            
 
     def shutdown(self, arg):
         print("Shutdown by %s" % arg)

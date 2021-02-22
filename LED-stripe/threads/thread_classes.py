@@ -1,13 +1,13 @@
 import threading
 from observer_pattern.observer_classes import *
 import traceback
+from command import CommandHandler
 
 class ConsoleThread(threading.Thread, Observerable):
-    observers = []
 
     def __init__(self, threadID, name, group = None):
         super().__init__(group, threadID, name)
-
+        self.observers = []
         #setup inherited variables
         self.threadID = threadID
         self.name = name
@@ -18,7 +18,9 @@ class ConsoleThread(threading.Thread, Observerable):
             while True:
                 try:
                     inputstr = input()
-                    self.notify(inputstr) #note: self.__class__ needed because python has static like variable inheritance - no real OOP
+                    self.notify(inputstr)
+                    commander = CommandHandler(self.observers)
+                    commander.execute(inputstr)
                 except EOFError as e:
                     print(e)
         except KeyboardInterrupt:

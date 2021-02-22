@@ -1,11 +1,9 @@
 from animation.animation_classes import *
 
 class Tasks:
-    _tasks = []
-    #[ ["effect", obj], ["replace", [obj, replacement] ], "stop"]
 
     def __init__(self):
-        pass
+        self._tasks = []
 
     def addTask(self, task : list):
         if len(task)==2:

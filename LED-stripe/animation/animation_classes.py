@@ -10,13 +10,7 @@ class IAnimation:
         self.stripe = stripe
         self._dead = False
 
-    def update():
-        pass
-
-    def reset(self): #probably stupid - may be deprecated soon
-        pass
-
-    def clone(self):  #probably stupid - may be deprecated soon
+    def update(self):
         pass
 
     def isDead(self):
@@ -148,7 +142,7 @@ class Nightsky(IAnimation):
             #while any(star.position == rand for star in self._stars): #can turn out performance heavy
             #    rand = round(random.randrange(0,self.stripe.numPixels()-1))
             if not any(star.position == rand for star in self._stars):
-                self._stars.append(Star(self.stripe, round(random.randrange(0,self.stripe.numPixels()-1)), self.velocity, self.startBrightness, self.endBrightness, self.colors))
+                self._stars.append(Star(self.stripe, rand, self.velocity, self.startBrightness, self.endBrightness, self.colors))
         for star in self._stars:
             star.update()
             if star.isDead():
