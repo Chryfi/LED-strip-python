@@ -96,7 +96,7 @@ class RainbowCycle(IAnimation):
 class PulseFade(IAnimation):
     def __init__(self, stripe : PixelStrip, velocity, startBrightness = 255, endBrightness = 0):
         super().__init__(stripe)
-        self.velocity = round(velocity)
+        self.velocity = velocity
         self.dt = 0.5
         if velocity<0:
             self.startBrightness = max(startBrightness,endBrightness)
@@ -111,9 +111,9 @@ class PulseFade(IAnimation):
         self.age = 0
 
     def update(self):
-        self.currentBrightness = clamp(round(self.currentBrightness+self.velocity), min(self.endBrightness, self.startBrightness), max(self.endBrightness, self.startBrightness))
+        self.currentBrightness = clamp(self.currentBrightness+self.velocity, min(self.endBrightness, self.startBrightness), max(self.endBrightness, self.startBrightness))
 
-        self.stripe.setBrightness(self.currentBrightness)
+        self.stripe.setBrightness(round(self.currentBrightness)
 
         if self.velocity<0 and self.currentBrightness <= min(self.endBrightness, self.startBrightness):
             self.velocity = -self.velocity
@@ -127,7 +127,7 @@ class Nightsky(IAnimation):
 
     def __init__(self, stripe : PixelStrip, velocity, rate, startBrightness = 0, endBrightness = 255, colors : ColorInterface = None):
         super().__init__(stripe)
-        self.velocity = round(velocity)
+        self.velocity = velocity
         self.rate = round(rate)
         self.dt = 0.5
         self.startBrightness = min(startBrightness,endBrightness)
@@ -153,7 +153,7 @@ class Star(IAnimation):
 
     def __init__(self, stripe : PixelStrip, position, velocity, startBrightness = 0, endBrightness = 255, colors : ColorInterface = None):
         super().__init__(stripe)
-        self.velocity = abs(round(velocity))
+        self.velocity = abs(velocity)
         self.dt = 0.5
         self.position = position
         self.startBrightness = min(startBrightness,endBrightness)
@@ -164,8 +164,8 @@ class Star(IAnimation):
 
 
     def update(self):
-        self.currentBrightness = clamp(round(self.currentBrightness+self.velocity), 0, max(self.endBrightness, self.startBrightness))
-        brightFactor = self.currentBrightness/255
+        self.currentBrightness = clamp(self.currentBrightness+self.velocity, 0, max(self.endBrightness, self.startBrightness))
+        brightFactor = round(self.currentBrightness)/255
 
         if self.colors == None:
             self.stripe.setPixelColorRGB(self.position, round(255*brightFactor), round(255*brightFactor), round(255*brightFactor))

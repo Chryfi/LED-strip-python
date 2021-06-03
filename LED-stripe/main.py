@@ -37,7 +37,7 @@ def main():
         stripe = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
     # Intialize the library (must be called once before other functions).
     stripe.begin()
-    handler = AnimationHandler(stripe)
+    handler = AnimationHandler(stripe, "stripe1")
     console =  ConsoleThread(1, "console-Thread")
 
     console.daemon=True
@@ -94,7 +94,7 @@ def main():
 
 class AnimationHandler(IObserver):
 
-    def __init__(self, stripe : PixelStrip):
+    def __init__(self, stripe : PixelStrip, name : str):
         self.interrupted = False
         self.clear = False
         self.isShutDown = False
@@ -102,6 +102,7 @@ class AnimationHandler(IObserver):
         self.stripe = stripe
         self._animations = []
         self.tasks = Tasks()
+        self.name = name
 
     def addAnimation(self, animation : IAnimation):
         self._animations.append(animation)

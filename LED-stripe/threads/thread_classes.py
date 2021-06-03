@@ -20,7 +20,9 @@ class ConsoleThread(threading.Thread, Observerable):
                     inputstr = input()
                     self.notify(inputstr)
                     commander = CommandHandler(self.observers)
-                    commander.execute(inputstr)
+                    commandthread = threading.Thread(target = commander.execute, args = (inputstr,))
+                    commandthread.start() 
+                    #Possible problem: it could mess up with the order of commands as both threads could simultaneosly process different commands
                 except EOFError as e:
                     print(e)
         except KeyboardInterrupt:

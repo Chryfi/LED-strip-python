@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import re
+from animation.animation_classes import *
 
 class CommandHandler:
     _commandsmap = ["add","stop"]
@@ -11,11 +12,31 @@ class CommandHandler:
     def execute(self, arg):
         #check what to execute -> then do something like this
         search = re.search("^([A-Za-z]+)\s", arg)
-        if search != None and search.group() == "add": #get string until whitespace comes
+        argList = re.findall('(--[A-Zaz]+-)|([A-Za-z0-9-_]+|"[^"]+"|\'[^\']+\')', arg) #find strings seperated by space or strings like "a b" 'a'
+
+        parameters = []
+        args = []
+        for arg in argList:
+            if arg[0] != "":
+                parameters.append(arg[0])
+            if arg[1] != "":
+                args.append(arg[1])
+        
+        if args:
+            if args[0] == "switch":
+                if len(args)==2:
+                    klass = globals()[args[1]]
+                    instance = klass(self.receivers[0].stripe, 150)
+                    handler.addAnimation(instance)
+
+        if search != None and search.group() == "add ": #get string until whitespace comes
             instance = arg[3:].strip()
             parameters = re.findall("\((.+)\)$", instance) #get strings inside ( ... ) - don't allowe "( ... ) ..."
             if parameters:
                 classname = instance.replace("("+parameters[0]+")","")
+                klass = globals()[classname]
+                instance = klass(self.receivers[0].stripe, 150)
+                self.receivers[0].addAnimation(instance)
                 print(classname)
                 print(parameters)
             else:
